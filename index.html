@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MyApp-Launcher</title>
+  <style>
+    :root {
+      /* 淡い緑をベースにしたカラーパレット */
+      --bg-gradient-start: #eafaf1;
+      --bg-gradient-mid: #d4f1df;
+      --bg-gradient-end: #bce7ce;
+      --card-bg: rgba(255, 255, 255, 0.78);
+      --card-hover-bg: rgba(255, 255, 255, 0.95);
+      --card-border: rgba(110, 207, 151, 0.45);
+      --card-border-hover: #38b273;
+      --card-shadow: 0 10px 25px -5px rgba(46, 125, 82, 0.12), 0 4px 10px rgba(0, 0, 0, 0.03);
+      --card-shadow-hover: 0 18px 35px -5px rgba(39, 138, 86, 0.22), 0 6px 15px rgba(46, 125, 82, 0.15);
+      --primary: #278a56;
+      --primary-dark: #1b5e3a;
+      --primary-light: #52c286;
+      --accent-badge: #d8f3e5;
+      --text: #1d3326;
+      --text-sub: #4b6b57;
+      --header-gradient: linear-gradient(135deg, #1b5e3a 0%, #278a56 50%, #38b273 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* 賑やかさを出すための背景装飾（柔らかなグラデーション光輪） */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(70px);
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    body::before {
+      top: -100px;
+      right: -80px;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, #86efac, #6ee7b7, transparent 70%);
+    }
+
+    body::after {
+      bottom: -100px;
+      left: -80px;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, #a7f3d0, #6ee7b7, transparent 70%);
+    }
+
+    /* 先頭行：タイトルヘッダー */
+    .header-bar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.75rem 0.6rem 1.75rem;
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .header-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .header-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #34d399, #059669);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.28);
+      color: #fff;
+    }
+
+    .header-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .header-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: var(--header-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-subtitle {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-sub);
+      background: rgba(255, 255, 255, 0.6);
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+      border: 1px solid rgba(110, 207, 151, 0.35);
+      backdrop-filter: blur(4px);
+    }
+
+    /* メインコンテンツエリア */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 1.25rem 1.25rem 1.25rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* グリッドコンテナ
+       基本（横向き・ワイド画面）：横4列 × 縦2行 (4x2) */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 1.1rem;
+      width: 100%;
+      max-width: 1280px;
+      height: 82vh; /* 横画面時に画面内にバランス良く収まる高さ */
+      min-height: 480px;
+    }
+
+    /* 画面の向きに応じた切り替え
+       縦向き（portrait または 縦長アスペクト比）の時：横2列 × 縦4行 (2x4) */
+    @media (orientation: portrait), (max-aspect-ratio: 1/1), (max-width: 768px) {
+      .header-bar {
+        padding: 0.9rem 1.25rem 0.5rem 1.25rem;
+      }
+      .header-title {
+        font-size: 1.25rem;
+      }
+      .header-subtitle {
+        display: none;
+      }
+      .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        height: auto;
+        min-height: calc(100vh - 85px);
+        gap: 0.9rem;
+      }
+    }
+
+    /* 各アプリタイル */
+    .tile {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1.5px solid var(--card-border);
+      border-radius: 18px;
+      box-shadow: var(--card-shadow);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                  box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                  border-color 0.22s ease, 
+                  background-color 0.22s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* 微かな光沢ハイライト */
+    .tile::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 45%;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent);
+      pointer-events: none;
+      border-radius: 18px 18px 0 0;
+    }
+
+    .tile:active {
+      transform: scale(0.97);
+    }
+
+    @media (hover: hover) {
+      .tile:hover {
+        background: var(--card-hover-bg);
+        border-color: var(--card-border-hover);
+        box-shadow: var(--card-shadow-hover);
+        transform: translateY(-4px) scale(1.008);
+      }
+      .tile:hover .tile-img img {
+        transform: scale(1.05);
+      }
+      .tile:hover .tile-title {
+        color: var(--primary);
+      }
+    }
+
+    /* 画像プレビュー部分 */
+    .tile-img {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      background: linear-gradient(135deg, #e4f5eb 0%, #d0edd9 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tile-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.35s ease;
+    }
+
+    /* 空欄・画像なしパネルのプレースホルダー */
+    .empty-tile-graphic {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: #629977;
+    }
+
+    .empty-tile-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 2px dashed rgba(74, 153, 107, 0.45);
+      background: rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .empty-tile-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+    }
+
+    .tile:hover .empty-tile-icon {
+      transform: scale(1.1) rotate(4deg);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .empty-tile-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #4a755d;
+      letter-spacing: 0.04em;
+    }
+
+    /* タイル下部のテキスト情報 */
+    .tile-content {
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.88);
+      border-top: 1px solid rgba(110, 207, 151, 0.25);
+      position: relative;
+      z-index: 1;
+    }
+
+    .tile-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.15s ease;
+    }
+
+    .tile-desc {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-sub);
+      margin-top: 0.2rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 先頭行：タイトル -->
+  <header class="header-bar">
+    <div class="header-title-wrap">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/>
+        </svg>
+      </div>
+      <h1 class="header-title">MyApp-Launcher</h1>
+    </div>
+    <div class="header-subtitle">自作Webアプリ</div>
+  </header>
+
+  <!-- メイングリッドエリア -->
+  <main class="main-wrap">
+    <div class="grid-container" id="grid"></div>
+  </main>
+
+  <script>
+    // 8個のアプリ定義
+    // 各パネル内の空欄（App 4〜8）は自由に変更・追記していただけます
+    const apps = [
+      {
+        title: "数独",
+        desc: "木目調ナンプレ",
+        url: "./apps/sudoku/index.html",
+        image: "./img/sudoku.jpg"
+      },
+      {
+        title: "RAMPART DEGENCE",
+        desc: "基地防衛撃ちまくりゲーム",
+        url: "./apps/shooting/index.html",
+        image: "./img/defence.jpg"
+      },
+      {
+        title: "Moku-MP",
+        desc: "木目調音楽プレイヤー",
+        url: "./apps/mokuplay/index.html",
+        image: "./img/moku-mp.jpg"
+      },
+      {
+        title: "博多～久留米 在来線限定時刻表",
+        desc: "めっちゃ不便なJR博多→久留米下り限定の時刻表。特急は除外",
+        url: "./apps/jikoku/index.html",
+        image: "./img/kurume.jpg"
+      },
+      {
+        title: "App 5",
+        desc: "準備中...",
+        url: "#",
+        image: ""
+      },
+      {
+        title: "App 6",
+        desc: "準備中...",
+        url: "#",
+        image: ""
+      },
+      {
+        title: "App 7",
+        desc: "準備中...",
+        url: "#",
+        image: ""
+      },
+      {
+        title: "App 8",
+        desc: "準備中...",
+        url: "#",
+        image: ""
+      }
+    ];
+
+    const container = document.getElementById("grid");
+
+    apps.forEach((app, index) => {
+      const tile = document.createElement("a");
+      tile.className = "tile";
+      tile.href = app.url;
+      tile.target = "_self";
+
+      // 空欄パネルまたは画像未設定時におしゃれなプレースホルダーを表示
+      let imgContent = "";
+      if (app.image) {
+        imgContent = `<img src="${app.image}" alt="${app.title}" onerror="this.parentElement.innerHTML = getPlaceholderHtml('${app.title}', ${index + 1})" loading="lazy">`;
+      } else {
+        imgContent = getPlaceholderHtml(app.title, index + 1);
+      }
+
+      tile.innerHTML = `
+        <div class="tile-img">
+          ${imgContent}
+        </div>
+        <div class="tile-content">
+          <div class="tile-title">${app.title}</div>
+          <div class="tile-desc">${app.desc}</div>
+        </div>
+      `;
+
+      container.appendChild(tile);
+    });
+
+    // 空欄用のプレースホルダーSVG生成関数
+    function getPlaceholderHtml(title, slotNum) {
+      return `
+        <div class="empty-tile-graphic">
+          <div class="empty-tile-icon">
+            <svg fill="none" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+          </div>
+          <span class="empty-tile-tag">SLOT ${slotNum}</span>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
