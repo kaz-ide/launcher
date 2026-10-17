@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>XMBookmark - XMB Bookmark Launcher</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23111827' stroke='%2338bdf8' stroke-width='6'/><path d='M30 50h40M50 30v40' stroke='%2338bdf8' stroke-width='6' stroke-linecap='round'/></svg>">
+</head>
+<body class="theme-purple">
+
+  <!-- 背景キャンバス（宇宙空間＋XMBウェーブ＋パーティクル） -->
+  <canvas id="bg-canvas"></canvas>
+  <div id="wallpaper-overlay" class="wallpaper-overlay"></div>
+
+  <!-- タッチ・マウスクリック用の画面端ナビゲーションゾーン（エッジゾーン） -->
+  <div class="edge-zone edge-up" id="edge-up" title="上へ移動 (▲)">
+    <div class="edge-indicator">▲</div>
+  </div>
+  <div class="edge-zone edge-down" id="edge-down" title="下へ移動 (▼)">
+    <div class="edge-indicator">▼</div>
+  </div>
+  <div class="edge-zone edge-left" id="edge-left" title="左へ移動 (◀)">
+    <div class="edge-indicator">◀</div>
+  </div>
+  <div class="edge-zone edge-right" id="edge-right" title="右へ移動 (▶)">
+    <div class="edge-indicator">▶</div>
+  </div>
+
+  <!-- 右上ステータスバー（PS3 HUD） -->
+  <header class="hud-top-right">
+    <div class="hud-item gamepad-status" id="gamepad-status" title="ゲームパッド未接続">
+      <svg class="hud-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 6H5c-1.66 0-3 1.34-3 3v6c0 1.66 1.34 3 3 3l1.5-1.5h11l1.5 1.5c1.66 0 3-1.34 3-3V9c0-1.66-1.34-3-3-3zM8 13.5H6.5V15H5.5v-1.5H4v-1h1.5V11h1v1.5H8v1zm9.5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm2-2.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-2-2.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-2 2.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+      </svg>
+      <span class="gamepad-label" id="gamepad-label">OFFLINE</span>
+    </div>
+    <div class="hud-item bgm-status" id="hud-bgm-status" title="BGMステータス">
+      <svg class="hud-icon pulse-subtle" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+      </svg>
+      <span id="hud-bgm-text">BGM</span>
+    </div>
+    <div class="hud-item clock-display" id="clock-display">
+      10/14 09:00
+    </div>
+  </header>
+
+  <!-- パンくずリスト（仮想フォルダ潜り時） -->
+  <div class="breadcrumb-container" id="breadcrumb-container" style="display: none;">
+    <span class="breadcrumb-item breadcrumb-root" id="breadcrumb-root">Home</span>
+    <span class="breadcrumb-sep">&gt;</span>
+    <span class="breadcrumb-item breadcrumb-current" id="breadcrumb-current">Folder</span>
+  </div>
+
+  <!-- XMBメインステージ -->
+  <main class="xmb-stage" id="xmb-stage">
+    <!-- 横軸（メインカテゴリ）コンテナ -->
+    <div class="category-track" id="category-track"></div>
+
+    <!-- 縦軸（サブアイテム）コンテナ -->
+    <div class="item-track" id="item-track"></div>
+  </main>
+
+  <!-- 画面下部キーガイド・操作ヘルプ -->
+  <footer class="footer-guide">
+    <div class="guide-item"><span class="key-pill">▲ ▼ ◀ ▶</span> 移動 / スワイプ</div>
+    <div class="guide-item"><span class="key-pill">Enter / Tap</span> 決定</div>
+    <div class="guide-item"><span class="key-pill">Esc / Back</span> 戻る</div>
+    <div class="guide-item"><span class="key-pill">Del / ⌫</span> 削除</div>
+    <div class="guide-item"><span class="key-pill">Pad</span> D-Pad &amp; A/B</div>
+  </footer>
+
+  <!-- ================= モーダル系 ================= -->
+
+  <!-- アイテム追加モーダル -->
+  <div class="modal-backdrop" id="add-modal" style="display: none;">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h2 class="modal-title" id="add-modal-title">アイテムの登録</h2>
+        <button class="modal-close-btn" id="add-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- タイプ選択タブ -->
+        <div class="modal-tabs">
+          <button class="tab-btn active" data-tab="tab-url">🌐 URL / Webリンク</button>
+          <button class="tab-btn" data-tab="tab-file">📁 ファイル</button>
+          <button class="tab-btn" data-tab="tab-folder">📂 フォルダ</button>
+        </div>
+
+        <!-- URLタブ -->
+        <div class="tab-content active" id="tab-url">
+          <label class="form-label">タイトル</label>
+          <input type="text" id="url-title-input" class="form-input" placeholder="例: YouTube, GitHub...">
+          <label class="form-label">URL</label>
+          <input type="url" id="url-input" class="form-input" placeholder="https://...">
+          <label class="form-label">説明 / サブ情報</label>
+          <input type="text" id="url-desc-input" class="form-input" placeholder="例: 動画共有プラットフォーム">
+          <label class="form-label">アイコン種別</label>
+          <select id="url-icon-select" class="form-select">
+            <option value="globe">🌐 Webサイト</option>
+            <option value="game">🎮 ゲーム / アプリ</option>
+            <option value="video">🎬 動画 / シネマ</option>
+            <option value="music">🎵 音楽 / ポッドキャスト</option>
+            <option value="document">📄 ドキュメント / 記事</option>
+            <option value="star">⭐ お気に入り</option>
+          </select>
+        </div>
+
+        <!-- ファイルタブ -->
+        <div class="tab-content" id="tab-file">
+          <div class="file-drop-zone" id="file-drop-zone">
+            <input type="file" id="file-input" class="file-hidden-input">
+            <div class="drop-zone-text">
+              <svg class="drop-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+              <span>ここをクリックしてファイルを選択</span>
+              <small>画像、音楽、テキスト、動画（ブラウザ内プレビュー対応）</small>
+            </div>
+          </div>
+          <div id="file-selected-info" class="file-info-preview" style="display: none;"></div>
+          <label class="form-label">表示タイトル（未指定時はファイル名）</label>
+          <input type="text" id="file-title-input" class="form-input" placeholder="表示タイトル">
+          <label class="form-label">またはローカルファイルパス（参照登録）</label>
+          <input type="text" id="file-path-input" class="form-input" placeholder="C:\Users\...\file.ext">
+        </div>
+
+        <!-- フォルダタブ -->
+        <div class="tab-content" id="tab-folder">
+          <div class="folder-mode-select">
+            <label class="radio-label">
+              <input type="radio" name="folder-mode" value="import" checked>
+              <span><strong>PCのフォルダを一括取り込み（音楽・画像・サブフォルダ）</strong><br><small>フォルダ内のサブフォルダ・音楽・画像を階層構造ごとXMBへインポート</small></span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="folder-mode" value="virtual">
+              <span><strong>空のXMB内サブフォルダを作成</strong><br><small>XMB内で整理するための新しい空フォルダを作成</small></span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="folder-mode" value="path">
+              <span><strong>ローカルフォルダパス登録</strong><br><small>PC上のフォルダパスをメモ・ワンクリックコピー</small></span>
+            </label>
+          </div>
+
+          <!-- フォルダ一括インポートエリア -->
+          <div id="folder-import-group" style="margin-top: 14px;">
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 22px 18px; text-align: center;">
+              <input type="file" id="folder-import-input" webkitdirectory directory multiple style="display: none;">
+              <button type="button" class="btn btn-primary" id="btn-select-folder" style="font-size: 14px; padding: 10px 22px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                <span>📁 PCのフォルダを選択する</span>
+              </button>
+              <div style="font-size: 12px; color: rgba(255, 255, 255, 0.65); margin-top: 10px; line-height: 1.5;">
+                ボタンをクリックしてPCのフォルダ（音楽アルバム等）を指定すると、<br>
+                配下のサブフォルダ・音楽（MP3/FLAC等）・画像を自動で読み込みます。
+              </div>
+            </div>
+            <div id="folder-selected-info" class="file-info-preview" style="display: none; margin-top: 12px;"></div>
+            <div id="folder-progress-bar" style="display: none; margin-top: 10px;">
+              <div style="font-size: 12px; color: #38bdf8; margin-bottom: 4px;" id="folder-progress-text">取り込み準備中...</div>
+              <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden;">
+                <div id="folder-progress-fill" style="width: 0%; height: 100%; background: #38bdf8; transition: width 0.1s;"></div>
+              </div>
+            </div>
+            <label class="form-label" style="margin-top: 12px;">XMB上でのフォルダ表示名（未指定時はフォルダ名）</label>
+            <input type="text" id="folder-import-name-input" class="form-input" placeholder="フォルダ表示名">
+          </div>
+
+          <!-- 空フォルダ用入力 -->
+          <div id="folder-virtual-group" style="display: none; margin-top: 14px;">
+            <label class="form-label">フォルダ名</label>
+            <input type="text" id="folder-name-input" class="form-input" placeholder="例: お気に入り動画, Work">
+          </div>
+
+          <!-- パス登録用入力 -->
+          <div id="folder-path-group" style="display: none; margin-top: 14px;">
+            <label class="form-label">フォルダ名</label>
+            <input type="text" id="folder-path-name-input" class="form-input" placeholder="例: Projects, Music">
+            <label class="form-label" style="margin-top: 10px;">ローカルフォルダパス</label>
+            <input type="text" id="folder-path-input" class="form-input" placeholder="C:\Music\...">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="add-modal-cancel">キャンセル</button>
+        <button class="btn btn-primary" id="add-modal-submit">登録する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新規カテゴリ追加モーダル -->
+  <div class="modal-backdrop" id="add-category-modal" style="display: none;">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">新しいカテゴリ列の追加</h2>
+        <button class="modal-close-btn" id="add-category-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">カテゴリ名</label>
+        <input type="text" id="category-name-input" class="form-input" placeholder="例: Favorites, Tools...">
+        <label class="form-label">アイコン種別</label>
+        <div class="icon-selector" id="category-icon-selector">
+          <!-- JSで選択肢を生成 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="add-category-cancel">キャンセル</button>
+        <button class="btn btn-primary" id="add-category-submit">列を追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 設定ダイアログ（BGM・壁紙・データ管理） -->
+  <div class="modal-backdrop" id="settings-modal" style="display: none;">
+    <div class="modal-dialog glass-panel modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title" id="settings-modal-title">設定 (Settings)</h2>
+        <button class="modal-close-btn" id="settings-close">&times;</button>
+      </div>
+      <div class="modal-body" id="settings-modal-body">
+        <!-- 動的コンテンツ切り替え -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="settings-done">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- メディアプレビュー（画像・音楽・テキスト・動画・URL） -->
+  <div class="preview-backdrop" id="preview-modal" style="display: none;">
+    <div class="preview-container glass-panel">
+      <div class="preview-header">
+        <div class="preview-title" id="preview-title">Preview</div>
+        <button class="modal-close-btn" id="preview-close">&times;</button>
+      </div>
+      <div class="preview-body" id="preview-body">
+        <!-- 動的に要素を挿入 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- アイテム操作ポップアップメニュー（右クリック / 長押し / Shift+F10） -->
+  <div class="context-menu glass-panel" id="context-menu" style="display: none;">
+    <div class="context-menu-header" id="ctx-header-title">Item Menu</div>
+    <button class="context-item" id="ctx-open">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+      <span>開く (同じタブ)</span>
+    </button>
+    <button class="context-item" id="ctx-copy-url">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+      <span>URLをコピー</span>
+    </button>
+    <button class="context-item" id="ctx-copy-title">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></svg>
+      <span>タイトルをコピー</span>
+    </button>
+    <button class="context-item" id="ctx-move">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg>
+      <span>別のカテゴリへ移動...</span>
+    </button>
+    <button class="context-item" id="ctx-edit">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      <span>アイテムを編集</span>
+    </button>
+    <div class="context-separator"></div>
+    <button class="context-item ctx-danger" id="ctx-delete">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      <span>アイテムを削除</span>
+    </button>
+    <button class="context-item" id="ctx-cancel">
+      <span>閉じる (Esc)</span>
+    </button>
+  </div>
+
+  <!-- カテゴリ編集ポップアップメニュー（長押し / Bボタン / 右クリック） -->
+  <div class="context-menu glass-panel" id="category-context-menu" style="display: none;">
+    <div class="context-menu-header" id="cat-ctx-header-title">カテゴリ設定</div>
+    <button class="context-item" id="cat-ctx-rename">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      <span>名前・アイコンを変更</span>
+    </button>
+    <button class="context-item" id="cat-ctx-move-left">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      <span>◀ 左へ移動</span>
+    </button>
+    <button class="context-item" id="cat-ctx-move-right">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+      <span>▶ 右へ移動</span>
+    </button>
+    <div class="context-separator"></div>
+    <button class="context-item ctx-danger" id="cat-ctx-delete">
+      <svg class="ctx-icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      <span>カテゴリを削除</span>
+    </button>
+    <button class="context-item" id="cat-ctx-cancel">
+      <span>閉じる (Esc)</span>
+    </button>
+  </div>
+
+  <!-- カテゴリ編集モーダル（名前＆アイコン変更） -->
+  <div class="modal-backdrop" id="edit-category-modal" style="display: none;">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">カテゴリの変更</h2>
+        <button class="modal-close-btn" id="edit-category-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">カテゴリ名</label>
+        <input type="text" id="edit-cat-name-input" class="form-input">
+        <label class="form-label">アイコン種別</label>
+        <div class="icon-selector" id="edit-cat-icon-selector">
+          <!-- JSで選択肢を生成 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="edit-category-cancel">キャンセル</button>
+        <button class="btn btn-primary" id="edit-category-submit">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- アイテム移動先選択モーダル -->
+  <div class="modal-backdrop" id="move-modal" style="display: none;">
+    <div class="modal-dialog glass-panel" style="max-width: 420px;">
+      <div class="modal-header">
+        <h2 class="modal-title">移動先のカテゴリを選択</h2>
+        <button class="modal-close-btn" id="move-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: rgba(255,255,255,0.75);">アイテム「<span id="move-item-name" style="color:#fff; font-weight:700;"></span>」の移動先:</p>
+        <div class="move-category-list" id="move-category-list">
+          <!-- JSでカテゴリ候補を生成 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="move-modal-cancel">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- アイテム編集モーダル -->
+  <div class="modal-backdrop" id="edit-modal" style="display: none;">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">アイテムの編集</h2>
+        <button class="modal-close-btn" id="edit-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">タイトル</label>
+        <input type="text" id="edit-title-input" class="form-input">
+        <label class="form-label">URL / パス</label>
+        <input type="text" id="edit-url-input" class="form-input">
+        <label class="form-label">概要 / サブ情報</label>
+        <input type="text" id="edit-desc-input" class="form-input">
+        <label class="form-label">アイコン種別</label>
+        <select id="edit-icon-select" class="form-select">
+          <option value="globe">🌐 Webサイト</option>
+          <option value="star">⭐ お気に入り</option>
+          <option value="video">🎬 動画 / メディア</option>
+          <option value="music">🎵 音楽 / 配信</option>
+          <option value="game">🎮 ゲーム / アプリ</option>
+          <option value="document">📄 ドキュメント / 記事</option>
+          <option value="folder">📁 フォルダ</option>
+          <option value="tool">🛠️ 開発 / ツール</option>
+          <option value="file">📄 ファイル</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="edit-modal-cancel">キャンセル</button>
+        <button class="btn btn-primary" id="edit-modal-submit">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ブラウザ・ブックマーク（HTML）インポートモーダル -->
+  <div class="modal-backdrop" id="import-modal" style="display: none;">
+    <div class="modal-dialog glass-panel modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title">ブラウザ・ブックマークのインポート (HTML)</h2>
+        <button class="modal-close-btn" id="import-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.5;">
+          Chrome / Edge / Firefox等の「ブックマーク マネージャ ＞ ブックマークをエクスポート」で書き出した <code>bookmarks.html</code> ファイルを選択してください。
+        </p>
+        <div class="file-drop-zone" id="import-drop-zone">
+          <input type="file" id="import-html-file" accept=".html,.htm" class="file-hidden-input">
+          <div class="drop-zone-text">
+            <svg class="drop-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <span id="import-file-name-label">ここをクリックして bookmarks.html を選択</span>
+            <small>ブラウザ標準のHTMLエクスポートファイル</small>
+          </div>
+        </div>
+
+        <div id="import-folder-selection" style="display: none; flex-direction: column; gap: 10px; margin-top: 10px;">
+          <label class="form-label" style="color: #38bdf8;">取り込み対象のフォルダを指定:</label>
+          <select id="import-folder-select" class="form-select">
+            <!-- パース後にフォルダ候補を自動生成 -->
+          </select>
+          <p style="font-size: 12px; color: rgba(255,255,255,0.65);">
+            ※「ブックマーク バー」を指定すると、バー直下にある各フォルダがXMBookmarkの横カテゴリ列として綺麗にインポートされます。
+          </p>
+
+          <div style="margin-top: 6px;">
+            <label class="form-label">インポート方式:</label>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+              <label class="radio-label">
+                <input type="radio" name="import-mode" value="create-categories" checked>
+                <span><strong>フォルダごとに新しいカテゴリ列を作成（推奨）</strong><br><small>ブックマークバー内の各フォルダ（動画、仕事など）をXMBookmarkの横列として配置</small></span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="import-mode" value="current-category">
+                <span><strong>現在選択中のカテゴリ列にすべて追加</strong><br><small>現在の列にまとめてブックマークを取り込みます</small></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="import-modal-cancel">キャンセル</button>
+        <button class="btn btn-primary" id="import-modal-submit" disabled>インポートを実行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div class="toast-notification" id="toast-notification" style="display: none;"></div>
+
+  <script src="sound.js"></script>
+  <script src="wave.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
