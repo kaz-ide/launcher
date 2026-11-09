@@ -3,45 +3,53 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>JR博多駅→JR久留米駅 時刻表 (813系スタイル)</title>
+  <title>JR博多駅→JR久留米駅 時刻表 (813系 レッド＆ステンレスシルバー)</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
-    /* 813系 (JR九州 近郊型電車) テーマカラー設定 */
+    /* 813系 (JR九州 近郊型電車) テーマカラー設定: 上部レッド × 下部ステンレスシルバー */
     :root {
-      --train-red: #d61f26;       /* 813系 ビビッドレッド (前面マスク・ドア) */
+      --train-red: #d61f26;         /* 813系 クリムゾンレッド (前面・ドア) */
       --train-red-dark: #b91c1c;
-      --train-black: #18181b;     /* フロントフェイス・窓周りブラック */
-      --train-silver: #f1f5f9;    /* ステンレス車体シルバー */
-      --train-silver-dark: #94a3b8;
-      --train-yellow: #f59e0b;    /* ドア注意色・警戒色イエロー */
+      --train-silver-base: #e2e8f0; /* 813系 ステンレス車体シルバー */
+      --train-silver-light: #edf2f7;/* ステンレス明部 */
+      --train-silver-dark: #cbd5e1; /* ステンレスシャドウ */
+      --train-black: #18181b;       /* フロントマスク・ブラックサッシ */
+      --train-yellow: #f59e0b;      /* ドア注意色・警戒色イエロー */
 
       --bg-page: #0f1117;
-      --bg-card: #181b22;
-      --border-color: #2d3343;
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --primary-color: #d61f26;
-      --accent-color: #212634;
+      --text-main: #0f172a;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      background-color: var(--background, var(--bg-page));
-      color: var(--foreground, var(--text-main));
+      background-color: var(--bg-page);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-      margin: 0;
-      padding: 0;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
 
-    /* Scrollbar styling */
+    /* ステンレスヘアライン調テクスチャ */
+    .silver-metallic-bg {
+      background-color: #e5ebf2;
+      background-image: linear-gradient(180deg, #edf2f7 0%, #e2e8f0 50%, #d8e0ea 100%);
+    }
+
+    /* スクロールバー: 813系レッドアクセント */
     ::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
+      width: 6px;
+      height: 6px;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(214, 31, 38, 0.4);
+      background: rgba(214, 31, 38, 0.55);
       border-radius: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(203, 213, 225, 0.6);
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -51,101 +59,105 @@
       scrollbar-width: none;
     }
 
-    /* 813系 アクティブタブ */
+    /* 813系 アクティブタブ (赤地に白文字) */
     .tab-active {
       background-color: #d61f26 !important;
       color: #ffffff !important;
       font-weight: 800;
-      box-shadow: 0 2px 6px rgba(214, 31, 38, 0.45);
+      box-shadow: 0 2px 8px rgba(214, 31, 38, 0.5);
       border-color: #ef4444 !important;
     }
   </style>
 </head>
-<body class="antialiased p-1.5 sm:p-4 min-h-screen flex flex-col justify-start">
+<body class="antialiased p-1.5 sm:p-3 md:p-4 min-h-screen flex flex-col justify-start">
   
-  <div class="w-full max-w-lg mx-auto bg-[var(--card,var(--bg-card))] border-2 border-zinc-700/80 dark:border-zinc-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+  <!-- 全画面レスポンシブコンテナ: 上部レッド × 下部ステンレスシルバー (813系スタイル) -->
+  <div class="w-full max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto border-2 border-zinc-700/80 rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col flex-1 h-[calc(100dvh-0.75rem)] sm:h-[calc(100dvh-1.5rem)] md:h-[calc(100dvh-2rem)] transition-all duration-300">
 
-    <!-- 813系 フロントマスク風 ヘッダー -->
-    <header class="relative bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white px-3.5 py-3 border-b-2 border-zinc-900 shadow-md">
+    <!-- 【上半分】813系 フロントマスク風 レッドヘッダー -->
+    <header class="shrink-0 relative bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white px-3.5 sm:px-5 md:px-6 py-2.5 md:py-3.5 border-b-2 border-zinc-900 shadow-md">
       <!-- 813ロゴ & タイトルバー -->
       <div class="flex items-center justify-between">
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 md:gap-3">
             <!-- 813 車体標記風エンブレム -->
-            <span class="px-2 py-0.5 rounded font-black text-xs bg-zinc-950 text-red-500 border border-red-500/50 tracking-widest font-mono shadow-inner">813</span>
-            <h1 class="text-base font-black tracking-tight text-white drop-shadow">JR 博多 ➔ 久留米</h1>
-            <span class="text-[9.5px] px-1.5 py-0.5 rounded font-bold bg-zinc-950/80 text-yellow-300 border border-yellow-400/40">乗車券のみ</span>
+            <span class="px-2 md:px-2.5 py-0.5 md:py-1 rounded font-black text-xs md:text-sm bg-zinc-950 text-red-500 border border-red-500/50 tracking-widest font-mono shadow-inner">813</span>
+            <h1 class="text-base sm:text-lg md:text-xl lg:text-2xl font-black tracking-tight text-white drop-shadow">JR 博多 ➔ 久留米</h1>
+            <span class="text-[9.5px] sm:text-xs md:text-sm px-1.5 md:px-2 py-0.5 md:py-1 rounded font-bold bg-zinc-950/80 text-yellow-300 border border-yellow-400/40">乗車券のみ</span>
           </div>
-          <p class="text-[11px] text-red-100 font-medium mt-1 flex items-center gap-1.5">
+          <p class="text-[11px] sm:text-xs md:text-sm text-red-100 font-medium mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2">
             <span class="inline-block w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
             <span>鹿児島本線 下り (全47便 毎日運転)</span>
-            <span class="opacity-75 text-[9.5px] font-mono tracking-wider ml-1">COMMUTER TRAIN 813</span>
+            <span class="opacity-80 text-[9.5px] md:text-xs font-mono tracking-wider ml-1">COMMUTER TRAIN 813</span>
           </p>
         </div>
 
         <!-- 快速絞り込みボタン -->
-        <button id="rapidToggle" onclick="toggleRapidFilter()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-red-400/40 bg-zinc-950 text-white hover:bg-zinc-900 transition text-xs font-bold shadow">
-          <span class="text-yellow-400 font-black">⚡</span>
+        <button id="rapidToggle" onclick="toggleRapidFilter()" class="flex items-center gap-1.5 px-2.5 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl border border-red-400/40 bg-zinc-950 text-white hover:bg-zinc-900 transition text-xs md:text-sm font-bold shadow-md cursor-pointer shrink-0">
+          <span class="text-yellow-400 font-black text-sm md:text-base">⚡</span>
           <span id="rapidToggleLabel">快速のみ</span>
         </button>
       </div>
 
       <!-- サブ情報ストライプ -->
-      <div class="mt-2.5 pt-2 border-t border-red-400/30 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-red-100/90 font-medium">
+      <div class="mt-2 md:mt-2.5 pt-1.5 md:pt-2 border-t border-red-400/30 flex flex-wrap gap-x-3 md:gap-x-5 gap-y-0.5 text-[10px] sm:text-xs md:text-sm text-red-100/90 font-medium">
         <span>❌ 特急・新幹線除外</span>
         <span>❌ 二日市止・後続追いつかれ便除外</span>
         <span>✅ 鳥栖始発接続便 掲載</span>
       </div>
     </header>
 
-    <!-- 813系 ドア・車体風 時間帯切替タブ -->
-    <nav class="p-1.5 bg-zinc-950 border-b border-zinc-800 flex items-center gap-1 overflow-x-auto no-scrollbar text-xs">
-      <button class="tab-btn flex-1 min-w-[54px] py-1.5 px-1 rounded-lg text-center transition font-semibold text-[11px] text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent" data-band="now" onclick="changeBand('now')">
+    <!-- 813系 窓サッシ・黒帯風 時間帯切替タブ (固定領域: shrink-0) -->
+    <nav class="shrink-0 p-1.5 md:p-2 bg-zinc-950 border-b-2 border-zinc-800 flex items-center gap-1 md:gap-1.5 overflow-x-auto no-scrollbar text-xs">
+      <button class="tab-btn flex-1 min-w-[54px] md:min-w-[76px] py-1.5 md:py-2 px-1 md:px-2.5 rounded-lg md:rounded-xl text-center transition font-semibold text-[11px] md:text-sm lg:text-base text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent cursor-pointer" data-band="now" onclick="changeBand('now')">
         ⏱️ 次の便
       </button>
-      <button class="tab-btn flex-1 min-w-[54px] py-1.5 px-1 rounded-lg text-center transition font-semibold text-[11px] text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent" data-band="morning" onclick="changeBand('morning')">
-        🌅 朝 <span class="opacity-70 text-[9px] block sm:inline">5-9時</span>
+      <button class="tab-btn flex-1 min-w-[54px] md:min-w-[76px] py-1.5 md:py-2 px-1 md:px-2.5 rounded-lg md:rounded-xl text-center transition font-semibold text-[11px] md:text-sm lg:text-base text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent cursor-pointer" data-band="morning" onclick="changeBand('morning')">
+        🌅 朝 <span class="opacity-70 text-[9px] md:text-xs block sm:inline">5-9時</span>
       </button>
-      <button class="tab-btn flex-1 min-w-[54px] py-1.5 px-1 rounded-lg text-center transition font-semibold text-[11px] text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent" data-band="day" onclick="changeBand('day')">
-        ☀️ 昼 <span class="opacity-70 text-[9px] block sm:inline">10-15時</span>
+      <button class="tab-btn flex-1 min-w-[54px] md:min-w-[76px] py-1.5 md:py-2 px-1 md:px-2.5 rounded-lg md:rounded-xl text-center transition font-semibold text-[11px] md:text-sm lg:text-base text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent cursor-pointer" data-band="day" onclick="changeBand('day')">
+        ☀️ 昼 <span class="opacity-70 text-[9px] md:text-xs block sm:inline">10-15時</span>
       </button>
-      <button class="tab-btn flex-1 min-w-[54px] py-1.5 px-1 rounded-lg text-center transition font-semibold text-[11px] text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent" data-band="evening" onclick="changeBand('evening')">
-        🌇 夕 <span class="opacity-70 text-[9px] block sm:inline">16-19時</span>
+      <button class="tab-btn flex-1 min-w-[54px] md:min-w-[76px] py-1.5 md:py-2 px-1 md:px-2.5 rounded-lg md:rounded-xl text-center transition font-semibold text-[11px] md:text-sm lg:text-base text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent cursor-pointer" data-band="evening" onclick="changeBand('evening')">
+        🌇 夕 <span class="opacity-70 text-[9px] md:text-xs block sm:inline">16-19時</span>
       </button>
-      <button class="tab-btn flex-1 min-w-[54px] py-1.5 px-1 rounded-lg text-center transition font-semibold text-[11px] text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent" data-band="night" onclick="changeBand('night')">
-        🌙 夜 <span class="opacity-70 text-[9px] block sm:inline">20-23時</span>
+      <button class="tab-btn flex-1 min-w-[54px] md:min-w-[76px] py-1.5 md:py-2 px-1 md:px-2.5 rounded-lg md:rounded-xl text-center transition font-semibold text-[11px] md:text-sm lg:text-base text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent cursor-pointer" data-band="night" onclick="changeBand('night')">
+        🌙 夜 <span class="opacity-70 text-[9px] md:text-xs block sm:inline">20-23時</span>
       </button>
-      <button class="tab-btn py-1.5 px-2 rounded-lg text-center transition font-semibold text-[11px] text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent" data-band="all" onclick="changeBand('all')">
+      <button class="tab-btn py-1.5 md:py-2 px-2.5 md:px-3.5 rounded-lg md:rounded-xl text-center transition font-semibold text-[11px] md:text-sm lg:text-base text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent cursor-pointer" data-band="all" onclick="changeBand('all')">
         全便
       </button>
     </nav>
 
-    <!-- ステンレス調 列ヘッダー -->
-    <div class="grid grid-cols-12 px-3 py-1.5 text-[11px] font-bold text-zinc-300 bg-zinc-900 border-b border-zinc-800 items-center shadow-sm">
-      <div class="col-span-2 text-zinc-400">始発</div>
+    <!-- ガンメタル調 列ヘッダー (固定領域: shrink-0) -->
+    <div class="shrink-0 grid grid-cols-12 px-3 sm:px-5 md:px-6 py-1.5 md:py-2 text-[11px] sm:text-xs md:text-sm lg:text-base font-bold text-zinc-200 bg-zinc-900 border-b border-zinc-700 items-center shadow-sm">
+      <div class="col-span-2 text-zinc-300">始発</div>
       <div class="col-span-2 text-center text-red-500 font-black">博多発</div>
       <div class="col-span-3 text-center text-zinc-300">鳥栖 (着/発)</div>
       <div class="col-span-2 text-center text-emerald-400 font-black">久留米着</div>
       <div class="col-span-3 text-right text-zinc-300">種別 / 所要</div>
     </div>
 
-    <!-- メイン時刻表一覧 -->
-    <main id="timetableContainer" class="divide-y divide-zinc-800/80 bg-zinc-950/60 overflow-y-auto max-h-[58vh] sm:max-h-[600px] text-xs">
+    <!-- 【下半分】813系 ステンレスシルバー背景 時刻表一覧 (silver-metallic-bg / flex-1) -->
+    <main id="timetableContainer" class="flex-1 silver-metallic-bg divide-y divide-slate-300/90 overflow-y-auto text-xs min-h-0">
       <!-- Injected by JavaScript -->
     </main>
 
-    <!-- フッター -->
-    <footer class="px-3.5 py-2 bg-zinc-950 border-t border-zinc-800 flex items-center justify-between text-[11px] text-zinc-400">
-      <div class="flex items-center gap-1.5">
-        <span class="inline-block w-2 h-2 rounded-full bg-red-600"></span>
-        <span>行をタップで詳細・接続便を表示</span>
+    <!-- ステンレスシルバー フッター (固定領域: shrink-0) -->
+    <footer class="shrink-0 px-3.5 sm:px-5 md:px-6 py-2 md:py-2.5 bg-slate-200 border-t border-slate-300 flex items-center justify-between text-[11px] sm:text-xs md:text-sm text-slate-700 font-medium">
+      <div class="flex items-center gap-1.5 md:gap-2">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-600 shadow-sm"></span>
+        <span class="font-semibold text-slate-800">行をタップで詳細・接続便を表示</span>
       </div>
-      <span id="listCountLabel" class="font-mono font-bold text-yellow-400">--便</span>
+      <span id="listCountLabel" class="font-mono font-black text-red-700 text-xs md:text-sm lg:text-base bg-white/70 px-2 py-0.5 rounded border border-slate-300 shadow-sm">--便</span>
     </footer>
 
   </div>
 
   <script>
+
+
+
 
     // 判定処理
     (function() {
@@ -215,12 +227,12 @@
     }
 
     function render() {
-      // Update Tab Styles
+      // Update Tab Styles (PCレスポンシブ対応)
       document.querySelectorAll('.tab-btn').forEach(btn => {
         if (btn.dataset.band === activeBand) {
-          btn.className = 'tab-btn tab-active flex-1 min-w-[54px] py-1.5 px-1 rounded-lg text-center transition font-bold text-[11px]';
+          btn.className = 'tab-btn tab-active flex-1 min-w-[54px] md:min-w-[76px] py-1.5 md:py-2 px-1 md:px-2.5 rounded-lg md:rounded-xl text-center transition font-bold text-[11px] md:text-sm lg:text-base cursor-pointer';
         } else {
-          btn.className = 'tab-btn flex-1 min-w-[54px] py-1.5 px-1 rounded-lg text-center transition font-medium text-[11px] text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent';
+          btn.className = 'tab-btn flex-1 min-w-[54px] md:min-w-[76px] py-1.5 md:py-2 px-1 md:px-2.5 rounded-lg md:rounded-xl text-center transition font-semibold text-[11px] md:text-sm lg:text-base text-zinc-400 hover:text-white hover:bg-zinc-800 border border-transparent cursor-pointer';
         }
       });
 
@@ -235,7 +247,7 @@
       const nowMin = getNowMinutes();
       if (activeBand === 'now') {
         const afterNow = items.filter(t => parseMin(t.hakata_dep) >= nowMin);
-        items = afterNow.length >= 6 ? afterNow.slice(0, 8) : items.slice(0, 8);
+        items = afterNow.length >= 6 ? afterNow.slice(0, 10) : items.slice(0, 10);
       } else if (activeBand !== 'all') {
         items = items.filter(t => t.time_band === activeBand);
       }
@@ -245,83 +257,86 @@
       const container = document.getElementById('timetableContainer');
       if (items.length === 0) {
         container.innerHTML = `
-          <div class="py-12 px-4 text-center text-zinc-400">
-            <p class="text-sm font-bold text-zinc-300">条件に合う列車がありません</p>
-            <p class="text-xs mt-1">「快速のみ」をオフにするか、別の時間帯を選択してください。</p>
+          <div class="py-16 px-4 text-center text-slate-500">
+            <p class="text-base md:text-lg font-bold text-slate-700">条件に合う列車がありません</p>
+            <p class="text-xs md:text-sm mt-1.5">「快速のみ」をオフにするか、別の時間帯を選択してください。</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = items.map(t => {
+      container.innerHTML = items.map((t, idx) => {
         const isRapid = t.type_badge === '快速';
         const isSect = t.type_badge === '区間快速';
         const isSelected = selectedTrainNo === t.no;
 
-        // 813系 種別バッジ (快速=赤幕 / 区快=黄色幕 / 普通=黒幕)
+        // 813系 種別バッジ (快速=赤幕 / 区快=黄色幕 / 普通=黒幕) - シルバー背景でクッキリ目立つ配色
         let badge = '';
         if (isRapid) {
-          badge = '<span class="px-1.5 py-0.5 rounded font-black bg-red-600 text-white text-[10px] tracking-tight shadow-sm border border-red-400/40">快速</span>';
+          badge = '<span class="px-1.5 md:px-2 py-0.5 rounded font-black bg-red-600 text-white text-[10px] md:text-xs tracking-tight shadow-sm border border-red-700">快速</span>';
         } else if (isSect) {
-          badge = '<span class="px-1.5 py-0.5 rounded font-black bg-amber-400 text-zinc-950 text-[10px] tracking-tight shadow-sm border border-amber-300">区快</span>';
+          badge = '<span class="px-1.5 md:px-2 py-0.5 rounded font-black bg-amber-400 text-zinc-950 text-[10px] md:text-xs tracking-tight shadow-sm border border-amber-500">区快</span>';
         } else {
-          badge = '<span class="px-1.5 py-0.5 rounded font-medium bg-zinc-800 text-zinc-300 text-[10px] border border-zinc-700">普通</span>';
+          badge = '<span class="px-1.5 md:px-2 py-0.5 rounded font-bold bg-zinc-800 text-white text-[10px] md:text-xs border border-zinc-900 shadow-sm">普通</span>';
         }
 
         // 鳥栖 表示 (乗換は813系ドア注意色イエローでハイライト)
         const tosuHtml = t.is_transfer
-          ? `<div class="flex items-center justify-center gap-0.5 font-mono text-[10.5px] text-amber-400 font-bold">
+          ? `<div class="flex items-center justify-center gap-0.5 md:gap-1 font-mono text-[10.5px] sm:text-xs md:text-sm lg:text-base text-amber-800 font-bold">
                <span>${t.tosu_arr}</span>
-               <span class="text-[8px] px-1 py-0.2 rounded font-black bg-amber-400 text-zinc-950 font-sans shadow-sm">換</span>
+               <span class="text-[8px] md:text-[10px] px-1 md:px-1.5 py-0.2 rounded font-black bg-amber-400 text-zinc-950 font-sans shadow-sm border border-amber-500">換</span>
                <span>${t.tosu_dep}</span>
              </div>`
-          : `<div class="flex items-center justify-center gap-1 font-mono text-[11px] text-zinc-400">
+          : `<div class="flex items-center justify-center gap-1 font-mono text-[11px] sm:text-xs md:text-sm lg:text-base text-slate-700 font-semibold">
                <span>${t.tosu_arr}</span>
-               <span class="opacity-40 text-[9px]">/</span>
+               <span class="opacity-40 text-[9px] md:text-xs">/</span>
                <span>${t.tosu_dep}</span>
              </div>`;
 
         // 右側 行先・乗換補足
         const rightSub = t.is_transfer
-          ? `<div class="text-[9.5px] text-amber-400 font-bold truncate">鳥栖で乗換</div>`
-          : `<div class="text-[9.5px] text-zinc-400 truncate">${t.dest}行</div>`;
+          ? `<div class="text-[9.5px] sm:text-[11px] md:text-xs text-amber-800 font-bold truncate">鳥栖で乗換</div>`
+          : `<div class="text-[9.5px] sm:text-[11px] md:text-xs text-slate-600 font-medium truncate">${t.dest}行</div>`;
 
-        // 詳細カード (813系 赤い縦ラインアクセント付き)
+        // 詳細カード (813系 赤いドアラインを思わせる左アクセント)
         const detailCard = isSelected ? `
-          <div class="mt-2 p-2.5 rounded-xl bg-zinc-900 border-l-4 border-l-red-600 border border-zinc-800 space-y-1.5 text-[11px] text-zinc-300 shadow-md">
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-1">
-              <span class="text-zinc-400 font-medium">運行日:</span>
-              <span class="font-bold text-emerald-400">毎日運転（土休日も平日と同一ダイヤ）</span>
+          <div class="mt-2 p-3 md:p-4 rounded-xl md:rounded-2xl bg-white border-l-4 border-l-red-600 border border-slate-300 space-y-1.5 md:space-y-2 text-[11px] sm:text-xs md:text-sm text-slate-800 shadow-md">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-1 md:pb-1.5">
+              <span class="text-slate-500 font-medium">運行日:</span>
+              <span class="font-bold text-emerald-700">毎日運転（土休日も平日と同一ダイヤ）</span>
             </div>
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-1">
-              <span class="text-zinc-400 font-medium">始発駅・終点:</span>
-              <span class="font-semibold text-white">${t.origin}駅 始発 ➔ ${t.dest}行</span>
+            <div class="flex items-center justify-between border-b border-slate-200 pb-1 md:pb-1.5">
+              <span class="text-slate-500 font-medium">始発駅・終点:</span>
+              <span class="font-bold text-slate-900">${t.origin}駅 始発 ➔ ${t.dest}行</span>
             </div>
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-1">
-              <span class="text-zinc-400 font-medium">種別詳細:</span>
-              <span class="font-semibold text-red-400">${t.type_badge}（${t.note || t.dest + '行'}）</span>
+            <div class="flex items-center justify-between border-b border-slate-200 pb-1 md:pb-1.5">
+              <span class="text-slate-500 font-medium">種別詳細:</span>
+              <span class="font-bold text-red-600">${t.type_badge}（${t.note || t.dest + '行'}）</span>
             </div>
             ${t.is_transfer ? `
-            <div class="p-2 rounded-lg bg-amber-950/40 border border-amber-500/40 text-[11px] text-amber-200">
-              ⚡ <strong class="text-amber-300">鳥栖駅乗り継ぎ:</strong> 博多発便は鳥栖止まりです。鳥栖駅<strong>${t.tosu_arr}着</strong>後、向かいホーム等の<strong>${t.tosu_dep}発 ${t.transfer_info.replace('鳥栖乗換 ', '')}</strong>へスムーズに乗り継ぎ、久留米駅<strong>${t.kurume_arr}着</strong>となります。
+            <div class="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-amber-50 border border-amber-300 text-[11px] sm:text-xs md:text-sm text-amber-950 leading-relaxed font-medium">
+              ⚡ <strong class="text-amber-800">鳥栖駅乗り継ぎ:</strong> 博多発便は鳥栖止まりです。鳥栖駅<strong>${t.tosu_arr}着</strong>後、向かいホーム等の<strong>${t.tosu_dep}発 ${t.transfer_info.replace('鳥栖乗換 ', '')}</strong>へスムーズに乗り継ぎ、久留米駅<strong>${t.kurume_arr}着</strong>となります。
             </div>` : `
-            <div class="p-2 rounded-lg bg-red-950/30 border border-red-600/30 text-[11px] text-red-200">
-              🚆 <strong class="text-red-300">久留米まで直通運転:</strong> 鳥栖駅での乗り換えなしで、久留米駅まで直通運行します。
+            <div class="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-red-50 border border-red-200 text-[11px] sm:text-xs md:text-sm text-red-950 leading-relaxed font-medium">
+              🚆 <strong class="text-red-700">久留米まで直通運転:</strong> 鳥栖駅での乗り換えなしで、久留米駅まで直通運行します。
             </div>`}
           </div>
         ` : '';
 
+        // ステンレスシルバー調の行（ゼブラパターン + ホバー時の光沢ホワイト）
+        const zebraBg = idx % 2 === 0 ? 'bg-[#edf2f7]/90' : 'bg-[#e2e8f0]/90';
+
         return `
-          <div class="px-3 py-2 hover:bg-zinc-800/60 transition cursor-pointer select-none" onclick="toggleRow(${t.no})">
+          <div class="px-3 sm:px-5 md:px-6 py-2 md:py-2.5 ${zebraBg} hover:bg-white transition cursor-pointer select-none border-b border-slate-300/80" onclick="toggleRow(${t.no})">
             <div class="grid grid-cols-12 items-center">
-              <!-- 始発駅 -->
+              <!-- 始発駅 (濃いチャコールブラック) -->
               <div class="col-span-2">
-                <span class="font-semibold text-[11px] text-zinc-300 truncate block">${t.origin}</span>
+                <span class="font-bold text-[11px] sm:text-xs md:text-sm lg:text-base text-slate-800 truncate block">${t.origin}</span>
               </div>
 
-              <!-- 博多発 (813 Red) -->
+              <!-- 博多発 (813 Red - ステンレス地に映える鮮烈な赤) -->
               <div class="col-span-2 text-center">
-                <span class="text-[14px] font-black font-mono text-red-500 tracking-tight">${t.hakata_dep}</span>
+                <span class="text-[14px] sm:text-base md:text-lg lg:text-xl font-black font-mono text-red-600 tracking-tight drop-shadow-sm">${t.hakata_dep}</span>
               </div>
 
               <!-- 鳥栖 (着/発) -->
@@ -329,16 +344,16 @@
                 ${tosuHtml}
               </div>
 
-              <!-- 久留米着 (Emerald Green) -->
+              <!-- 久留米着 (深みのあるエメラルドグリーン) -->
               <div class="col-span-2 text-center">
-                <span class="text-[14px] font-black font-mono text-emerald-400 tracking-tight">${t.kurume_arr}</span>
+                <span class="text-[14px] sm:text-base md:text-lg lg:text-xl font-black font-mono text-emerald-700 tracking-tight">${t.kurume_arr}</span>
               </div>
 
               <!-- 種別・所要時間 -->
               <div class="col-span-3 flex flex-col items-end">
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-1 md:gap-1.5">
                   ${badge}
-                  <span class="text-[11px] font-black font-mono text-zinc-200">${t.travel_time}分</span>
+                  <span class="text-[11px] sm:text-xs md:text-sm lg:text-base font-black font-mono text-slate-900">${t.travel_time}分</span>
                 </div>
                 ${rightSub}
               </div>
